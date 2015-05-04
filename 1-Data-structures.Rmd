@@ -1,0 +1,143 @@
+Quiz:
+
+1. Three properties of vector: length, type, name?
+2. Type: double, integer, character, factor ; Rare Types: date? and ?
+3. Attributes are named informations set to an object? Get them and set thme by 'attr' function?
+4. List different from atomic vector because each element in list can be of different type + can store other objects, same for matrix and data frames
+5. A list that is a matrix, no. Data frame with column a matrix no.
+
+## Vectors ##
+
+Properties: **Type**, **Length**, **Attributes**
+
+### Atomic vectors ###
+
+Types: logical, integer, double and character
+
+NA is logical vector of length 1, adapted to vector type
+Example:
+```{r}
+a = c(1, 2, 3, 4, NA)
+b = NA
+
+typeof(a[5])
+#> [1] "double"
+typeof(b)
+#> [1] "logical"
+``` 
+**|!|** all elements of vector must be the same type, otherwise **coerced** to be the same type
+
+### Lists ###
+
+**recursive** vectors
+
+complex objects, used to create `lm` and `data.frame` objects
+
+### Exercises ###
+
+1. Six types of atomic vector: **logical**, **character**, **double**, **integer**, **raw** and **complex**
+2. is.vector() and is.numeric() does not test if object a vector, returns TRUE only if object is a vector without name
+3.
+```{r}
+c(1, FALSE)
+#> [1] 1 0
+c("a", 1)
+#> [1] "a" "1"
+c(list(1), "a")
+#> coerces to two lists
+c(TRUE, 1L)
+#> [1] 1 1
+``` 
+4. `unlist()` flatten the list while `as.vector()` doesn't
+5. `1 == "1"` `TRUE` because of coercion of numbers to character
+Same for `-1 < FALSE` coercion of logical to integer
+While in `"one" < 2` `"one"` can't be coerced to integer
+6. Because logical vectors can coerce to any types
+
+## Attributes ##
+
+Attributes = named list of meta-data
+
+Attributes are **lost** when modifying vector, except **names**, **dimensions** and **class**.
+Those attributes have accession function `names(x)`, `dim(x)` and `class(x)`
+
+### Names ###
+
+Naming a vector can be done in 3 ways
+```{r}
+# At creation
+x <- c(a = 0, b = 1, c = 2)
+
+# Modifying it in place
+x <- 1:3
+names(x) = c("a", "b", "c")
+
+# Creating a modified copy
+
+x <- setNames(1:3, c("a", "b", "c"))
+```
+new vector without names with `unname(x)` or in place `names(x) <- NULL`
+
+### Factors ###
+
+Integer vector with attributes `class()` and `levels()`
+
+```{r}
+x <- factor(c("a", "b", "b", "a"))
+x
+attributes(x)
+```
+
+**|!|** Factors are integers, be careful when using string methods on them (e.g. `gsub()`) they can be coerced to strings, some others will coerce them as integer
+
+### Exercises ###
+
+1. comment is a special attribute assigned using function `comment(x)`, not printed by default
+2. Reversing the levels of a factor changes the order in which they are picked, changed the corresponding integer to each level
+```{r}
+letters
+
+f1 = factor(letters)
+
+levels(f1)
+
+levels(f1) <- rev(levels(f1))
+
+f1
+
+ex = factor(c("a","a", "b", "c"), levels = f1)
+ex
+ex = factor(ex, levels = rev(f1))
+ex
+```
+
+3. `f2` has levels in alphabetical order while having the list in reverse orders
+`f3` has list in order while levels in reverse order
+
+## Matrices and arrays ##
+
+Arrays and matrices are atomic vectors with attributes `dim()`
+
+matrices: specify dimensions using two integers
+arrays: specify dimensions using a vector of integers
+
+`dim()` can also be set on list to make list-matrices or list-arrays
+
+### Exercises ###
+
+1. using `dim()` on vectors return `r NULL`
+2. `is.array()` will return `r TRUE`
+3. The three objects are similar but with different dimension structure
+
+## Data frames ##
+
+data frame are list of same length vectors
+
+**|!|** do not `cbind` vectors combine them in a data frame!
+
+### Exercises ###
+
+1. A data frame possesses 3 attributes `names`, `row.names` and `class`
+2. `as.matrix()` applied to a data frame coerces everything to character
+3. it is possible to have a data frame with both 0 rows and 0 columns as:
+`r data.frame()` 
