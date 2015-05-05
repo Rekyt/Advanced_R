@@ -1,0 +1,119 @@
+# Notes on Subsetting #
+
+## Quiz ##
+
+1. subsetting a vector with positive integers -> get element at given position
+with negative integers -> take element out
+logical vector -> return either the entire vector or `integer(0)`
+character vector -> `r NA`
+
+2. list
+[ -> get first element with attribute returns list
+[[ -> returns vector, name or number
+$ -> returns vector has to select by name
+
+3. Don't know
+
+4. if x matrix:
+`x[] <- 0` assign 0 to all cells in matrix
+`x <- 0` will assign 0 to x
+
+5. Don't know
+
+## Data types ##
+
+subset with `[`
+positive integer -> element with given index
+negative integer -> omit element
+logical vector -> select element where `r TRUE`, `r NA` returns a NA in place of element
+character vectors -> if vector is named
+
+### Exercises ###
+
+1.
+```{r}
+mtcars[mtcars$cyl == 4, ]  # Missing = when selecting rows
+mtcars[-(1:4), ]  # Missing parenthesis around selecting vector
+mtcars[mtcars$cyl <= 5,]  # Missing comma for selecting all columns
+mtcars[mtcars$cyl == 4 | mtcars$cyl == 6,]  # OR operator is not enough
+```
+
+2. `x <- 1:5; x[NA]` behaves differently from `x[NA_real_]` because `NA` is a logical value:
+```{r}
+x = 1:5
+x[NA]
+str(x[NA])  # Use logical value on vector
+str(NA)  # Logical value
+str(NA_real_)  # Real number
+str(x[NA_real_])  # Coerce real number in to integer and indexed column with number does not exist
+```
+
+3. `upper.tri()` returns TRUE in the upper triangle of the matrix, to subset cells in matrix no need additional subsetting to describe its behaviours.
+
+4. `mtcars[1:20]` returns an error because there a less than 20 columns in data frame, data frames are considered as list of list when not using the comma.
+Thus mtcars[1] returns the first column of mtcars.
+
+5.
+```{r}
+home.diag = function(x){
+	# Test if object is a matrix
+	if(!is.matrix(x)){
+	stop("Object is not a matrix!")
+	}
+	nr = nrow(x)
+	nc = ncol(x)
+	if(nr != nc){
+	stop("Can't extract diagonal of a non square matrix")
+	}
+	vect = c()
+	for(i in 1:nc){
+	vect = c(vect, m[i,i])
+	}
+	return(vect)
+}
+
+m = matrix(1:16, ncol = 4, nrow = 4)
+
+diag(m)
+
+home.diag(m)
+```
+
+6. It replaces all NA values in data frame by 0. `is.na(df)` creates a vector of logical to show where are NA values in data frame. Then we are selecting those cells, and assign them 0 automatically coerced as a vector.
+
+## Subsetting operators ##
+
+### Simplyfing vs. preserving ###
+Difference between simplyfing and preserving
+
+simplyfing: get the simplest object no name, only values
+preserving: get same type of object, with names
+
+### $ ###
+
+`$` is a shorthand to `[[, exact = F]]`
+**|!|** it does partial matching
+
+### Missing indices ###
+
+[[ and [ differs from missing or out of bound indices
+
+### Exercises ###
+
+1.
+```{r}
+
+mod = lm(mpg ~ wt, data = mtcars)
+
+mod$df.residual  # Residual degrees of freedom
+
+summary(mod)$r.squared  # get R squared
+```
+
+## Subsetting and assignment ##
+
+### Exercises ###
+
+1. Would randomly permute using `sample` function for data frame `df` it would be `df[, sample(ncol(df))]`
+2. `df[sample(nrow(df), m), ]` if sample had to be contiguous then sample a single number between 1 and number of rows of df minus length of sample, select this number + m rows
+3. For data frame `df` `ordered.col = order(colnames(df))` call `df[, ordered.col]`
