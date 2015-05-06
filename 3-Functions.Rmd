@@ -1,0 +1,251 @@
+# Notes on Functions #
+
+### Quiz ###
+1. Three components of function? arguments, name, and execution?
+**Body**, **arguments** and **environment**
+
+2. 11 -> f1(1) returns a function and `f1(1)()` executes the function that adds 10 to x
+**TRUE**
+
+3. `2 * 3 + 1`
+**TRUE**
+
+4. `mean(x = c(1:10, NA), na.rm = TRUE)`
+**TRUE**
+
+5. No it does not because `b` isn't used
+**TRUE**
+
+6. Don't know
+see **infix**
+
+7. Don't know
+use **`on.exit()`**
+
+## Function components ##
+
+All functions has **body**, **arguments** and **environment** accessed by `body()`, `formals()` and `environment()`
+
+### Primitive functions ###
+Primitive functions call C code directly using `.Primitive()`
+
+### Exercises ###
+
+1. `is.function()` and `is.primitive()`
+
+2.
+```{r}
+library(dplyr)
+
+objs = mget(ls("package:base"), inherits = TRUE)
+funs = Filter(is.function, objs)
+
+funs.df = sapply(funs, function(x) length(formals(x))) %>%
+	as.data.frame(.)
+funs.df = funs.df %>%
+	mutate(name = row.names(funs.df)) %>%
+	rename_(narg = ".")
+
+# Answers question 2.a. it's the scan function that has most argument
+filter(funs.df, narg == max(funs.df$narg))
+
+# Answers question 2.b.
+filter(funs.df, narg == 0) %>% dim()
+```
+	c. Can adapt code by `is.primitive` instead of `is.function` in `Filter` function
+
+3. **body**, **args**, **environment**
+4. When environment is globalenv
+
+## Lexical scoping ##
+
+### Name masking ###
+
+R look first for variable inside function then a level above, etc.
+
+### Functions vs. variables ###
+
+finding function looks exactly like finding variables, when looking for a function R ignores variables with the same name.
+
+### A fresh start ###
+
+Every time the function is called a new environment is created, each invocation is independent.
+
+### Dynamic lookup ###
+
+R looks for values when the function is **run** not when it was created.
+
+**|!|** It may be a problem if function is run with a spelling error and variable exists in globalEnv -> can know function dependencies using `codetools::findGlobals(f)`
+
+However can make function totally self-contained because R always relies on lexical scoping.
+
+### Exercises ###
+
+1. It returns a vector with first value named "c", because when looking for `c()` ignored the local variable `c`, and the name of the vector can't be a number.
+
+2.
+- Name masking
+- Fresh start
+- Functions vs. variables
+- Dynamic Lookup
+
+3. It returns 202
+
+## Every operation is a function call ##
+
+Everything is a function call `[`, `+`, etc.
+
+## Function arguments ##
+
+### Calling functions ###
+
+Arguments can partially match
+
+### Calling a function given a list of arguments ###
+
+Use `do.call()` to use the list of argument to function
+
+### Default and missing arguments ###
+
+Default arguments can be defined using other arguments.
+
+### Lazy evaluation ###
+
+Function arguments are only evaluated when used.
+
+`force()` to ensure an argument is evaluated.
+
+Unevaluated arguments are called **promises**
+
+### `...` ###
+
+Arbitrary list of extra-arguments, makes functions flexibles but error prone.
+
+### Exercises ###
+
+1.
+```{r}
+x = sample(c(1:10, NA), 20, TRUE)
+y = runif(20, 0, 1)
+cor(x, y, use = "pairwise.complete.obs", method = "kendall")
+```
+
+2. This function returns 3, because the default argument isn't used because already defined in the previous argument. It illustrates lazy evaluation.
+
+3. This function returns 100. Because z is defined in the function environment, it illustrates dynamic lookup inside the function.
+
+## Special calls ##
+
+### Infix functions ###
+
+Prefix function: name comes before the argument
+Infix function: name used between the argument (`+`, `:`, etc.)
+
+Can create custom special functions by surrounding name with `%`
+
+### Exercises ###
+1.
+```{r}
+library(stringr)
+library(dplyr)
+
+objs <- mget(ls("package:base"), inherits = TRUE)
+funs = Filter(is.function, objs)
+
+f.name = function(x) {
+	names(x) %>%
+	str_detect(regex("^%.*%$"))
+}
+
+funs %>%
+	f.name() %>%
+	names()
+```
+
+2. `%ANYCHARACTER%`
+3.
+```{r}
+`%xor%` = function(a, b) {
+	if(a!=b){
+	TRUE
+	} else {
+	FALSE
+	}
+}
+
+a = T
+b = F
+a %xor% b
+```
+
+4.
+```{r}
+# Infix version of intersect()
+`%I%` = function(a, b) {
+	vect = c()
+	for(i in a) {
+		if(i %in% b) {
+		vect = c(i, vect)
+		}
+	}
+	sort(vect)
+	}
+
+1:10 %I% 4:6
+
+# Infix version of union()
+`%U%` = function(x, y) {
+	union(x, y)
+	}
+
+# Infix version of setdiff()
+`%D%` = function(x, y) {
+	setdiff(x, y)
+	}	
+```
+
+5.
+```{r}
+library(pryr)
+
+`random<-` = function(vect, value) {
+	vect[sample(1:length(vect), 1)] = value
+	vect
+	}
+
+x = 1:10
+address(x)
+
+random(x) <- 25
+x
+
+address(x)
+```
+
+## Return values ##
+
+**Pure fonctions** don't impact workspace
+
+Functions can return invisible values using `invisible()` can wrap functions into () to force them to display
+
+### On exit ###
+
+Can be used to execute code when function exits regardless of the status
+
+### Exercises ###
+
+1.
+
+2. `detach()`. Can save `options()` or `par()` results in list and reload them doing `options(my_list)`
+
+3.
+```{r}
+graph_device = function(code) {
+	dev.new()
+	on.exit(dev.off())
+	force(code)
+	}
+```
+
+4. They differ because `capture.output()` is less modular, but handle more exceptions then `capture.output2()`. Also `capture.output()` can save results to a file, while `capture.output2()` can't
+
