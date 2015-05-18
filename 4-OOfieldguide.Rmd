@@ -1,0 +1,151 @@
+# Notes on OO field guide #
+
+### Quiz ###
+
+1. don't know
+
+2. `typeof()`
+
+3. don't know
+
+4. don't know
+
+## Base types ## 
+
+use `typeof()` function, beware of names inconsistencies
+
+## S3 ##
+
+### Recognising ###
+
+S3 objects only objects used in `base` and `stats` packages
+
+S3 methods can be recognised by their name `generic.class()`
+
+use `methods(class = "myobject")` to see a list of all the methods from an object
+
+### Defining classes ##
+
+create class using `structure`
+
+**|!|** Can change class of an object directly in R, shouldn't do it
+
+### Creating new methods ###
+
+Add new generic should use `UseMethod()` and add specific method
+
+```{r}
+f = function(x) UseMethod("f")  # Creates a generic 'f'
+
+f.foo = function(x) "f applied to foo"  # Adds method for 'foo' objects
+
+f.bar = function(x) "f applied to bar"  # Adds method for 'bar' objects
+
+foo = structure(list(), class = "foo")  # Creates an object of class 'foo'
+bar = structure(list(), class = "bar")  # Creates an object of class 'bar'
+foobar = structure(list(), class = c("foo", "bar"))  # Object that inherits first from 'foo'
+barfoo = structure(list(), class = c("bar", "foo"))  # Inherits first from 'bar'
+
+# 'UseMethod()' figures out which method, use first method in 'class' results
+
+class(foo)
+f(foo)
+
+class(bar)
+f(bar)
+
+class(foobar)
+f(foobar)
+
+class(barfoo)
+f(barfoo)
+
+# Can also add method to existing generic
+mean.foo = function(x) "this is the mean method"
+mean(foo)
+```
+
+**|!|** when defining new methods for existing generics, returned type is not checked, beware of compatabilities issues with existing code
+
+### Method dispatch ###
+
+Use `generic.default` method for fallback, if appropriate method does not exists
+
+Group generics are special generic making it possible to define methods for multiple generics in a single function see `?groupGeneric` for more info.
+
+**|!|** Beware not to call method directly `f.class()` may cause problem if provided object is not of the right class
+
+### Exercises ###
+
+1. Can be sure that both `t()` and `t.test()` are S3 generic because use `UseMethod()` in their source code
+
+```{r}
+# Creates different objects of class 'test'
+k = structure(list(), class = "test")
+l = structure(10, class = "test")
+m = structure(1:10, class = "test")
+
+# Applies 't()'
+t(k)
+t(l)
+t(m)
+```
+R searches applies function `t.test()`! Becauses it searched through function names `t.object_class()`...
+
+2. Classes that have a method for the `Math` group can be accessed with `methods()`
+```{r}
+methods("Math")
+```
+The methods work by applying verifying the type of all elements of the object and then applying the generic to the object. Or define an error message according to the type and the method used
+
+3. 
+```{r}
+# Need to use as character to get full names of functions
+plt = as.character(methods(class = "POSIXlt"))
+pct = as.character(methods(class = "POSIXct"))
+
+cor_plt_pct = sub('POSIXlt', 'POSIXct', plt)
+
+# Functions only defined for 'POSIXct' objects
+setdiff(cor_plt_pct, pct)
+
+# Common functions
+intersect(cor_plt_pct, pct)
+
+# To see difference between function
+should look into function in intersect
+```
+4.
+```{r}
+library(dplyr)
+library(pryr)
+
+# Function that returns TRUE if function is generic
+is.generic = function(x) {
+	is.element("generic", ftype(x))
+}
+# Get all the base function
+
+objs = ls("package:base") %>%  # list all the functions in 'base'
+	mget(inherits = TRUE)  # Fetches the functions
+
+base.generics = objs %>%
+	Filter(is.function, .) %>%
+	Filter(is.generic, .)
+
+m = base.generics %>%
+	sapply(names(.), function(x) x %>% methods() %>% length()) %>%
+
+m[which.max(m)]
+```
+
+5.
+`g(10)` returns `2` because of lexical scoping, while `h("a")` returns `"char a"` because of UseMethod's black magic
+
+6. The difference of behaviors is due to the fact that `f` isn't an object while `g` is because it has a user-defined class.
+
+## S4 ##
+
+### Recognising ###
+
+No S4 in base package and other commonly used packages, that why we look at `stats4`
